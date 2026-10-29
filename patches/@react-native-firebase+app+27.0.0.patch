@@ -1,0 +1,14 @@
+diff --git a/node_modules/@react-native-firebase/app/firebase_spm.rb b/node_modules/@react-native-firebase/app/firebase_spm.rb
+--- a/node_modules/@react-native-firebase/app/firebase_spm.rb
++++ b/node_modules/@react-native-firebase/app/firebase_spm.rb
+@@ -1333,8 +1333,8 @@ def rnfirebase_fix_spm_archive_signature_collision(installer)
+       next unless target.respond_to?(:shell_script_build_phases)
+       next unless target.shell_script_build_phases.any? { |phase| phase.name == '[CP] Embed Pods Frameworks' }
+ 
+-      rm_lines = RNFIREBASE_SPM_SIGNATURE_FIX_ARTIFACT_NAMES.map do |name|
+-        "rm -f \"${CONFIGURATION_BUILD_DIR}\"/#{name}.xcframework-ios.signature"
++      rm_lines = RNFIREBASE_SPM_SIGNATURE_FIX_ARTIFACT_NAMES.flat_map do |name|
++        %w[ios ios-simulator].map { |slice| "rm -f \"${CONFIGURATION_BUILD_DIR}\"/#{name}.xcframework-#{slice}.signature" }
+       end
+       # Trailing newline required for Xcode Run Script phase content.
+       shell_script = "#{rm_lines.join("\n")}\n"

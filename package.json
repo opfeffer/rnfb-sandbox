@@ -1,0 +1,24 @@
+{
+  "name": "rnfb-sig-repro",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "@react-native-firebase/analytics": "27.0.0",
+    "@react-native-firebase/app": "27.0.0",
+    "expo": "57.0.31",
+    "expo-build-properties": "57.0.22",
+    "expo-status-bar": "57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "patch-package": "8.0.1",
+    "typescript": "6.0.3"
+  }
+}
