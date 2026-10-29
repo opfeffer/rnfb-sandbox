@@ -16,9 +16,17 @@ An `xcodebuild archive` for a **simulator** destination stages `<name>.xcframewo
 instead, so the phase deletes nothing and the Archive step fails with the same "item with the same name already
 exists" collision that the workaround was written to prevent.
 
-This is what Bitrise's `xcode-build-for-simulator` step (3.x) runs: `xcodebuild archive -destination
-"generic/platform=iOS Simulator"` with an xcconfig that sets `CODE_SIGNING_ALLOWED=NO` and
-`COMPILER_INDEX_STORE_ENABLE=NO`.
+This is what Bitrise's [`xcode-build-for-simulator`](https://github.com/bitrise-steplib/steps-xcode-build-for-simulator/tree/3.0.3)
+step (3.x, links point to the `3.0.3` tag commit) runs by default:
+
+- It always runs the `archive` action, and `clean` is the only optional extra
+  ([`step.go` L229–234](https://github.com/bitrise-steplib/steps-xcode-build-for-simulator/blob/833e31ab560aa43de8a7b9bec98db162d6cc69f5/step.go#L229-L234)).
+- It passes its `destination` input as `-destination` and writes `xcconfig_content` to a file passed as `-xcconfig`
+  ([`step.go` L240–248](https://github.com/bitrise-steplib/steps-xcode-build-for-simulator/blob/833e31ab560aa43de8a7b9bec98db162d6cc69f5/step.go#L240-L248)).
+- `destination` defaults to `generic/platform=iOS Simulator`
+  ([`step.yml` L76–88](https://github.com/bitrise-steplib/steps-xcode-build-for-simulator/blob/833e31ab560aa43de8a7b9bec98db162d6cc69f5/step.yml#L76-L88)).
+- `xcconfig_content` defaults to `CODE_SIGNING_ALLOWED=NO` and `COMPILER_INDEX_STORE_ENABLE = NO`
+  ([`step.yml` L90–92](https://github.com/bitrise-steplib/steps-xcode-build-for-simulator/blob/833e31ab560aa43de8a7b9bec98db162d6cc69f5/step.yml#L90-L92)).
 
 ## Project
 
@@ -27,7 +35,8 @@ This is what Bitrise's `xcode-build-for-simulator` step (3.x) runs: `xcodebuild 
 - `expo-build-properties` with `ios.useFrameworks: "dynamic"`
 - `GoogleService-Info.plist` is a **placeholder with fake values** (bundle id `com.example.rnfbsigrepro`). It is
   build-only, and the app never runs.
-- `ci.xcconfig` mirrors the Bitrise xcconfig:
+- `ci.xcconfig` mirrors the step's default
+  [`xcconfig_content`](https://github.com/bitrise-steplib/steps-xcode-build-for-simulator/blob/833e31ab560aa43de8a7b9bec98db162d6cc69f5/step.yml#L90-L92):
   ```
   CODE_SIGNING_ALLOWED=NO
   COMPILER_INDEX_STORE_ENABLE=NO
