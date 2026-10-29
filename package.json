@@ -8,8 +8,8 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
-    "@react-native-firebase/analytics": "27.0.0",
-    "@react-native-firebase/app": "27.0.0",
+    "@react-native-firebase/analytics": "27.1.0",
+    "@react-native-firebase/app": "27.1.0",
     "expo": "57.0.31",
     "expo-build-properties": "57.0.22",
     "expo-status-bar": "57.0.1",

@@ -2,9 +2,15 @@
 
 Minimal repro for `@react-native-firebase/app`'s iOS SPM integration.
 
-`firebase_spm.rb` → `rnfirebase_fix_spm_archive_signature_collision` (L1325–1355) adds the Run Script phase
-**"[RNFB] Remove duplicate Firebase/Google SPM binary xcframework signature files"** to the app target. That phase
-only deletes `"${CONFIGURATION_BUILD_DIR}"/<name>.xcframework-ios.signature`.
+[`packages/app/firebase_spm.rb`](https://github.com/invertase/react-native-firebase/blob/c65e1ee3b78bcd0c5b66996100d7d1e579ca1614/packages/app/firebase_spm.rb)
+→ `rnfirebase_fix_spm_archive_signature_collision`
+([L1325–1353](https://github.com/invertase/react-native-firebase/blob/c65e1ee3b78bcd0c5b66996100d7d1e579ca1614/packages/app/firebase_spm.rb#L1325-L1353))
+adds the Run Script phase **"[RNFB] Remove duplicate Firebase/Google SPM binary xcframework signature files"** to the
+app target. That phase only deletes `"${CONFIGURATION_BUILD_DIR}"/<name>.xcframework-ios.signature`
+([L1336–1338](https://github.com/invertase/react-native-firebase/blob/c65e1ee3b78bcd0c5b66996100d7d1e579ca1614/packages/app/firebase_spm.rb#L1336-L1338)),
+for each name in `RNFIREBASE_SPM_SIGNATURE_FIX_ARTIFACT_NAMES`
+([L55–65](https://github.com/invertase/react-native-firebase/blob/c65e1ee3b78bcd0c5b66996100d7d1e579ca1614/packages/app/firebase_spm.rb#L55-L65)).
+All links point to the `v27.1.0` tag commit.
 
 An `xcodebuild archive` for a **simulator** destination stages `<name>.xcframework-ios-simulator.signature`
 instead, so the phase deletes nothing and the Archive step fails with the same "item with the same name already
@@ -14,15 +20,10 @@ This is what Bitrise's `xcode-build-for-simulator` step (3.x) runs: `xcodebuild 
 "generic/platform=iOS Simulator"` with an xcconfig that sets `CODE_SIGNING_ALLOWED=NO` and
 `COMPILER_INDEX_STORE_ENABLE=NO`.
 
-> **Version note:** the report is against **27.1.0**. This repro pins **27.0.0** because of a local
-> package-age policy (27.1.0 was under 7 days old when this was built). `firebase_spm.rb` is identical between
-> 27.0.0 and 27.1.0 apart from one comment line (`12.19.0` → `12.19.3` at L183). The signature-fix function and
-> `RNFIREBASE_SPM_SIGNATURE_FIX_ARTIFACT_NAMES` are byte-identical.
-
 ## Project
 
 - Expo SDK 57 blank TypeScript template (`expo-template-blank-typescript@57.0.33`), CNG via `expo prebuild`
-- `@react-native-firebase/app` + `@react-native-firebase/analytics` 27.0.0, with the `@react-native-firebase/app` config plugin
+- `@react-native-firebase/app` + `@react-native-firebase/analytics` 27.1.0, with the `@react-native-firebase/app` config plugin
 - `expo-build-properties` with `ios.useFrameworks: "dynamic"`
 - `GoogleService-Info.plist` is a **placeholder with fake values** (bundle id `com.example.rnfbsigrepro`). It is
   build-only, and the app never runs.
@@ -50,7 +51,7 @@ runs these cases, each with a fresh `-derivedDataPath`/`-archivePath` under `./b
 |---|---------|----------|----------|
 | 1 | `xcodebuild archive … -destination "generic/platform=iOS Simulator" -xcconfig ci.xcconfig` (stock RNFB) | fail | **fail**, exit 70 |
 | 2 | Same as case 1 but with `build` instead of `archive` | pass | **pass**, `BUILD SUCCEEDED` |
-| 3 | Case 1 after applying `patches/@react-native-firebase+app+27.0.0.patch` and running `pod install` again | pass | **pass**, `ARCHIVE SUCCEEDED` |
+| 3 | Case 1 after applying `patches/@react-native-firebase+app+27.1.0.patch` and running `pod install` again | pass | **pass**, `ARCHIVE SUCCEEDED` |
 | 4 | (optional, manual) Case 1 with analytics excluded from iOS autolinking (stock RNFB) | pass | **pass**, `ARCHIVE SUCCEEDED` |
 
 Common arguments:
@@ -125,7 +126,7 @@ is copied into the archive, and nothing can collide.
 
 ## Patch
 
-`patches/@react-native-firebase+app+27.0.0.patch` (applied with `patch-package`):
+`patches/@react-native-firebase+app+27.1.0.patch` (applied with `patch-package`):
 
 ```diff
 -      rm_lines = RNFIREBASE_SPM_SIGNATURE_FIX_ARTIFACT_NAMES.map do |name|
@@ -135,14 +136,16 @@ is copied into the archive, and nothing can collide.
        end
 ```
 
-The fallback warning text around L810–814 also only mentions `…xcframework-ios.signature`. It may be worth
+The fallback warning text at
+[L809–814](https://github.com/invertase/react-native-firebase/blob/c65e1ee3b78bcd0c5b66996100d7d1e579ca1614/packages/app/firebase_spm.rb#L809-L814)
+also only mentions `…xcframework-ios.signature`. It may be worth
 updating that wording as well.
 
 ## Versions
 
 | | |
 |---|---|
-| `@react-native-firebase/app`, `/analytics` | 27.0.0 (report: 27.1.0, same `firebase_spm.rb` logic) |
+| `@react-native-firebase/app`, `/analytics` | 27.1.0 |
 | expo | 57.0.31 |
 | expo-build-properties | 57.0.22 |
 | react-native | 0.86.3 |
@@ -153,7 +156,7 @@ updating that wording as well.
 | Node / npm | 24.22.1 / 11.19.1 |
 | macOS | 26.7.1, Apple M4 Pro |
 
-Resolved SPM packages (from `SourcePackages/workspace-state.json`): firebase-ios-sdk 13.0.0,
+Resolved SPM packages (from `SourcePackages/workspace-state.json`): firebase-ios-sdk 13.1.1,
 GoogleAppMeasurement 13.0.1, google-ads-on-device-conversion-ios-sdk 3.7.0, GoogleUtilities 8.1.5,
 abseil-cpp-binary 1.2025051202.0, grpc-binary 1.83.1, gtm-session-fetcher 5.3.1, nanopb 2.30910.1,
 promises 2.4.1, leveldb 1.22.5, app-check 12.0.0, interop-ios-for-google-sdks 101.0.0,
